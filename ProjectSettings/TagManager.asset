@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - EyeGroup
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - 
+  - 
+  - hero
+  - background
+  - ground
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: background
+    uniqueID: 3945386987
+    locked: 0
+  - name: hero
+    uniqueID: 1202517019
+    locked: 0
+  - name: eyes
+    uniqueID: 3974131883
+    locked: 0
+  - name: eyePoints
+    uniqueID: 2133904105
+    locked: 0
+  - name: jaws
+    uniqueID: 3924517587
+    locked: 0
+  - name: lips
+    uniqueID: 175173239
+    locked: 0
