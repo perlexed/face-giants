@@ -7,6 +7,7 @@ namespace FaceGiants {
     {
         public Rigidbody2D bullet;
         public float gunSpeed = 0.2f;
+        public GameObject bulletContainer;
 
         protected PlayerController playerController;
 
@@ -20,7 +21,7 @@ namespace FaceGiants {
         // Update is called once per frame
         void Update()
         {
-            if (Input.GetButton("Fire1"))
+            if (playerController.allowMovement && Input.GetButton("Fire1"))
             {
                 float currentTime = Time.time;
 
@@ -29,8 +30,15 @@ namespace FaceGiants {
                     Vector2 bulletVelocity = playerController.isFacingUp ? new Vector2(0, 10f) : new Vector2(10f, 0);
                     float bulletDirection = playerController.isFacingUp ? 90f : 0f;
 
-                    Rigidbody2D bulletInstance = Instantiate(bullet, transform.position, Quaternion.Euler(new Vector3(0, 0, bulletDirection))) as Rigidbody2D;
+                    Rigidbody2D bulletInstance = Instantiate(
+                        bullet,
+                        transform.position,
+                        Quaternion.Euler(new Vector3(0, 0, bulletDirection)),
+                        bulletContainer.transform
+                        ) as Rigidbody2D;
                     bulletInstance.velocity = bulletVelocity;
+                    bulletInstance.gameObject.GetComponent<BulletController>().isHeroGunBullet = true;
+
                     lastFireTime = currentTime;
                 }
 

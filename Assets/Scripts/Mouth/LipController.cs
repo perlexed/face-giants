@@ -2,98 +2,60 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using DigitalRuby.Tween;
+
 
 namespace FaceGiants {
     public class LipController : MonoBehaviour
     {
         public bool isOpened;
-        public bool doMove = false;
-        private Vector2 targetPosition;
-
-        public float speed = 1;
+        public bool isStopped = true;
         public float moveDistance = 1;
-
         public bool isFlipped = false;
-        private float moveMultiplier;
 
-        public float debugRangeToTarget;
-
-        private float step;
-
-        private LipsController.OnLipStatusChange callback;
-
-        void Start()
+        void MoveLipTween(bool doOpen)
         {
-            moveMultiplier = isFlipped ? -1 : 1;
-        }
-
-        // tween
-        //DoTween
-        //LeanTween
-
-        void Update()
-        {
-            if (doMove)
+            System.Action<ITween<Vector2>> updateLipPosition = (t) =>
             {
-                debugRangeToTarget = Math.Abs(transform.position.y - targetPosition.y);
-                Log("<b>range</b>: " + debugRangeToTarget, 1);
-                if (transform.position.y != targetPosition.y)
-                {
-                    step = speed * Time.deltaTime;
-                    transform.position = Vector3.MoveTowards(transform.position, targetPosition, step);
-                } else
-                {
-                    isOpened = !isOpened;
-                    callback(isOpened);
-                    callback = null;
-                    doMove = false;
-                    Log("reached target, stopping, now status is <b>" + (isOpened ? "opened" : "closed") + "</b>");
-                    Debug.Break();
-                }
-            }
+                transform.position = t.CurrentValue;
+            };
+
+            System.Action<ITween<Vector2>> onMoveCompletion = (t) => {
+                isStopped = true;
+            };
+
+            isStopped = false;
+
+            Vector2 targetPosition = new Vector2(
+                0.0f,
+                transform.position.y + (doOpen ? 1 : -1) * (isFlipped ? -1 : 1) * moveDistance
+            );
+
+            gameObject.Tween(
+                "MoveLip" + (isFlipped ? "bottom" : "upper"),
+                transform.position,
+                targetPosition,
+                1,
+                TweenScaleFunctions.CubicEaseInOut,
+                updateLipPosition,
+                onMoveCompletion
+            );
         }
 
-        public bool IsRunning { get { return !doMove; } }
-
-        public void OpenLip(LipsController.OnLipStatusChange funcCallback)
+        public void OpenLip()
         {
-            IsRunning = true;
-            LeanTween.Move(transform, targetPosition, 2f).OnFinish(_ => IsRunning = false);
-
-            callback = funcCallback;
-            Log("<b>open</b> lip");
-            //Debug.Break();
-
             if (!isOpened)
             {
-                doMove = true;
-                targetPosition = new Vector2(0.0f, transform.position.y + moveMultiplier * moveDistance);
+                MoveLipTween(true);
             }
         }
 
-        public void CloseLip(LipsController.OnLipStatusChange funcCallback)
+        public void CloseLip()
         {
-            callback = funcCallback;
-            Log("<b>close</b> lip");
-            //Debug.Break();
-
             if (isOpened)
             {
-                doMove = true;
-                targetPosition = new Vector2(0.0f, transform.position.y - moveMultiplier * moveDistance);
+                MoveLipTween(false);
             }
-        }
-
-        private void Log(string message, int lipId = 0)
-        {
-            if (
-                (lipId == 1 && isFlipped) || (lipId == 2 && !isFlipped)
-                )
-            {
-                return;
-            }
-            string lipPrefix = "<b>" + (isFlipped ? "bottom" : "top") + "</b> lip: ";
-            Debug.Log(lipPrefix + message, this);
         }
     }
 }

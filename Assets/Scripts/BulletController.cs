@@ -6,24 +6,17 @@ namespace FaceGiants {
     public class BulletController : MonoBehaviour
     {
         public GameObject hero;
-
-        protected PlayerController playerController;
+        public bool isHeroGunBullet = false;
 
         void Start()
         {
             Destroy(gameObject, 2);
         }
 
-        void OnTriggerEnter2D(Collider2D col)
+        void OnTriggerEnter2D(Collider2D collider)
         {
-            GameObject colliderGameObject = col.gameObject;
-
-            if (col.gameObject == hero)
-            {
-                //Debug.Log("hero");
-            } else
-            {
-                //Debug.Log("no hero");
+            if (!isHeroGunBullet && collider.gameObject == hero) {
+                hero.GetComponent<PlayerController>().GetHitByBullet();
             }
         }
     }

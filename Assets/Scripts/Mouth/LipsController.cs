@@ -14,67 +14,41 @@ namespace FaceGiants {
 
         public bool areLipsOpened = false;
 
-        private int lipsSyncCounter;
-        private MouthController.OnLipsStatusChange localCallback;
-
-        public delegate void OnLipStatusChange(bool status);
-
         void Start()
         {
             upperLipController = upperLip.GetComponent<LipController>();
             bottomLipController = bottomLip.GetComponent<LipController>();
         }
 
-        public void OpenLips(MouthController.OnLipsStatusChange parentCallback)
-        {
-            localCallback = parentCallback;
-            OnLipStatusChange callback = OnLipStatusChangeCallback;
-
-            lipsSyncCounter = 0;
-            upperLipController.OpenLip(callback);
-            bottomLipController.OpenLip(callback);
-        }
-
         public IEnumerator OpenLipsAndWaitForFinish()
         {
             upperLipController.OpenLip();
             bottomLipController.OpenLip();
-            while (upperLipController.IsRunning || bottomLipController.IsRunning)
+
+            while (!upperLipController.isStopped || !bottomLipController.isStopped)
+            {
                 yield return null;
-        }
-
-        public void CloseLips(Func<int, int> parentCallback)
-        {
-            OnLipStatusChange callback = OnLipStatusChangeCallback;
-
-            upperLipController.CloseLip(callback);
-            bottomLipController.CloseLip(callback);
-            parentCallback(4);
-
-        }
-
-        public void Calc<T>(T obj)
-        {
-            GetComponentsInChildren<LipsController>();
-            GetComponentsInChildren();
-        }
-
-        void OnLipStatusChangeCallback(bool status)
-        {
-            if (status)
-            {
-                lipsSyncCounter++;
-            } else
-            {
-                lipsSyncCounter--;
             }
+        }
 
-            Debug.Log("lip status callback <b>" + (status ? "opened" : "closed") + "</b>, result lipsSyncCounter: " + lipsSyncCounter);
+        public IEnumerator CloseLipsAndWaitForFinish()
+        {
+            upperLipController.CloseLip();
+            bottomLipController.CloseLip();
 
-            if (lipsSyncCounter != 1)
+            while (!upperLipController.isStopped || !bottomLipController.isStopped)
             {
-                localCallback();
+                yield return null;
             }
+        }
+
+        public void Reset()
+        {
+            upperLip.transform.localPosition = new Vector2(0, 0.6f);
+            bottomLip.transform.localPosition = new Vector2(0, -0.6f);
+
+            // @todo refactor this
+            StopAllCoroutines();
         }
     }
 }

@@ -60,3 +60,12 @@ TagManager:
   - name: lips
     uniqueID: 175173239
     locked: 0
+  - name: jaws-laser-points
+    uniqueID: 3855484041
+    locked: 0
+  - name: jaws-laser-beam
+    uniqueID: 3247620497
+    locked: 0
+  - name: UI
+    uniqueID: 170443929
+    locked: 0

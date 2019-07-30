@@ -6,36 +6,26 @@ namespace FaceGiants
 {
     public class JawsController : MonoBehaviour
     {
-        public GameObject upperJaw;
-        public GameObject bottomJaw;
+        public JawController upperJaw;
+        public JawController bottomJaw;
 
-        private MouthController.OnJawsStatusChange localCallback;
+        protected JawController contextJaw;
 
-        public delegate void OnJawStatusChange();
-
-        // Start is called before the first frame update
-        void Start()
+        public IEnumerator FireTeethAndWaitForFinish()
         {
-
+            contextJaw = Random.Range(0, 2) >= 1 ? upperJaw : bottomJaw;
+            yield return contextJaw.FireRandomTeethAndWaitForFinish();
         }
 
-        // Update is called once per frame
-        void Update()
+        public void Reset()
         {
+            if (contextJaw)
+            {
+                contextJaw.Reset();
 
-        }
-
-        public void FireTeeth(MouthController.OnJawsStatusChange callback)
-        {
-            localCallback = callback;
-
-            OnJawStatusChange jawCallback = OnJawStatusChangeCallback; 
-            upperJaw.GetComponent<JawController>().FireRandomTeeth(jawCallback);
-        }
-
-        public void OnJawStatusChangeCallback()
-        {
-            localCallback();
+                // @todo refactor this
+                StopAllCoroutines();
+            }
         }
     }
 }

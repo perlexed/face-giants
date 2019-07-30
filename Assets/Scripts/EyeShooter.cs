@@ -8,21 +8,17 @@ namespace FaceGiants
     {
         public Rigidbody2D bullet;
         public GameObject target;
-
-        void Start()
-        {
-
-        }
-
-        void Update()
-        {
-
-        }
+        public GameObject bulletContainer;
 
         public void Shoot()
         {
             Quaternion bulletQuaternion = Quaternion.Euler(new Vector3(0, 0, 0));
-            Rigidbody2D bulletInstance = Instantiate(bullet, transform.position, bulletQuaternion) as Rigidbody2D;
+            Rigidbody2D bulletInstance = Instantiate(
+                bullet,
+                transform.position,
+                bulletQuaternion,
+                bulletContainer.transform
+                ) as Rigidbody2D;
             
             bulletInstance.transform.right = target.transform.position - transform.position;
 
