@@ -6,29 +6,30 @@ namespace FaceGiants
 {
     public class EyeShooter : MonoBehaviour
     {
-        public Rigidbody2D bullet;
-        public GameObject target;
-        public GameObject bulletContainer;
+        public float BulletSpeed = 5f;
+        public Rigidbody2D BulletPrefab;
+        public GameObject BulletContainer;
 
         public void Shoot()
         {
-            Quaternion bulletQuaternion = Quaternion.Euler(new Vector3(0, 0, 0));
+            // Create bullet object
             Rigidbody2D bulletInstance = Instantiate(
-                bullet,
+                // based on bullet prefab
+                BulletPrefab,
+                // at the center of eye point
                 transform.position,
-                bulletQuaternion,
-                bulletContainer.transform
-                ) as Rigidbody2D;
-            
-            bulletInstance.transform.right = target.transform.position - transform.position;
+                // with no rotation
+                Quaternion.Euler(new Vector3(0, 0, 0)),
+                // put it in bullet container
+                BulletContainer.transform
+            ) as Rigidbody2D;
 
-            Vector2 toHero = target.transform.position - transform.position;
-            toHero.Normalize();
-            
-            bulletInstance.velocity = toHero * 5f;
+            // Rotate the bullet to face the target
+            Vector2 vectorToTarget = Player.Instance.transform.position - transform.position;
+            bulletInstance.transform.right = vectorToTarget;
 
-            // Setting the target
-            bulletInstance.gameObject.GetComponent<BulletController>().hero = target;
+            // Normalizing direction vector to make bullet speed independent of the distance to target
+            bulletInstance.velocity = vectorToTarget.normalized * BulletSpeed;
         }
     }
 }
