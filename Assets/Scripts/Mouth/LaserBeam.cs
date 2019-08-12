@@ -8,14 +8,18 @@ namespace FaceGiants
 {
     public class LaserBeam : MonoBehaviour
     {
-        public float LaserFireDuration = 3f;
+        public float LaserFireDuration = 4f;
+        [Range(0f, 1f)]
         public float SemiTransparency = 0.5f;
+        public float LaserTransitionTime = 1f;
 
         private bool _isFullPower = false;
         private SpriteRenderer _spriteRenderer;
         private Color _visibleColor;
         private Color _translucentColor;
         private Color _invisibleColor;
+
+        private ITween<Color> _contextTween;
 
         private void UpdateColorLocal (ITween<Color> tween)
         {
@@ -27,11 +31,11 @@ namespace FaceGiants
             _spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
             bool isFlipped = transform.parent.GetComponent<LaserPoint>().IsUpperJaw;
 
-            _visibleColor = ColorHelper.GetColorByTransparency(_spriteRenderer, 1f);
-            _translucentColor = ColorHelper.GetColorByTransparency(_spriteRenderer, SemiTransparency);
-            _invisibleColor = ColorHelper.GetColorByTransparency(_spriteRenderer, 0f);
+            _visibleColor = _spriteRenderer.GetColorByTransparency(1f);
+            _translucentColor = _spriteRenderer.GetColorByTransparency(SemiTransparency);
+            _invisibleColor = _spriteRenderer.GetColorByTransparency(0f);
 
-            _spriteRenderer.color = ColorHelper.GetColorByTransparency(_spriteRenderer, SemiTransparency);
+            _spriteRenderer.color = _translucentColor;
             _spriteRenderer.flipY = !isFlipped;
             _spriteRenderer.size = new Vector2(_spriteRenderer.size.x, 1f);
 
@@ -42,17 +46,22 @@ namespace FaceGiants
 
         public void OnDestroy()
         {
-            
+            if (_contextTween != null)
+            {
+                _contextTween.Stop(TweenStopBehavior.DoNotModify);
+            }
         }
 
         public IEnumerator Fire()
         {
             yield return WarmUp();
             yield return new WaitForSeconds(LaserFireDuration);
+            yield return CoolDown();
+            yield return new WaitForSeconds(LaserFireDuration);
             yield return TurnOff();
         }
 
-        public IEnumerator WarmUp()
+        private IEnumerator WarmUp()
         {
             bool isTweenCompleted = false;
 
@@ -62,27 +71,31 @@ namespace FaceGiants
                 _isFullPower = true;
             };
 
-            gameObject.Tween("FlashVisibilityTween", _translucentColor, _invisibleColor, 1, TweenScaleFunctions.CubicEaseIn, UpdateColorLocal)
-                .ContinueWith(new ColorTween().Setup(_invisibleColor, _translucentColor, 1, TweenScaleFunctions.CubicEaseIn, UpdateColorLocal))
-                .ContinueWith(new ColorTween().Setup(_translucentColor, _invisibleColor, 1, TweenScaleFunctions.CubicEaseIn, UpdateColorLocal))
-                .ContinueWith(new ColorTween().Setup(_invisibleColor, _visibleColor, 2, TweenScaleFunctions.CubicEaseIn, UpdateColorLocal, onColorChangeFinish));
-
+            _contextTween = gameObject.Tween("WarmUpTween", _translucentColor, _visibleColor, LaserTransitionTime, TweenScaleFunctions.CubicEaseIn, UpdateColorLocal, onColorChangeFinish);
             yield return new WaitUntil(() => isTweenCompleted == true);
         }
 
-        public IEnumerator TurnOff()
+        private IEnumerator CoolDown()
         {
             bool isTweenCompleted = false;
             System.Action<ITween<Color>> afterColorChange = tween => {
                 isTweenCompleted = true;
             };
 
-            gameObject.Tween("FlashVisibilityTween", _visibleColor, _translucentColor, 1, TweenScaleFunctions.CubicEaseIn, UpdateColorLocal, afterColorChange);
+            _contextTween = gameObject.Tween("CoolDownTween", _visibleColor, _translucentColor, LaserTransitionTime, TweenScaleFunctions.CubicEaseIn, UpdateColorLocal, afterColorChange);
             yield return new WaitUntil(() => isTweenCompleted == true);
+        }
 
+        private IEnumerator TurnOff()
+        {
             _isFullPower = false;
-            isTweenCompleted = false;
-            gameObject.Tween("FlashVisibilityTween", _translucentColor, _invisibleColor, 1, TweenScaleFunctions.CubicEaseIn, UpdateColorLocal, afterColorChange);
+
+            bool isTweenCompleted = false;
+            System.Action<ITween<Color>> afterColorChange = tween => {
+                isTweenCompleted = true;
+            };
+
+            _contextTween = gameObject.Tween("TurnOffTween", _translucentColor, _invisibleColor, LaserTransitionTime, TweenScaleFunctions.CubicEaseIn, UpdateColorLocal, afterColorChange);
             yield return new WaitUntil(() => isTweenCompleted == true);
         }
 
@@ -100,7 +113,7 @@ namespace FaceGiants
         {
             if (_isFullPower && collider.gameObject == Player.Instance.gameObject)
             {
-                Player.Instance.GetComponent<Player>().GetHitByLaser();
+                Player.Instance.GetHitByLaser();
             }
         }
     }

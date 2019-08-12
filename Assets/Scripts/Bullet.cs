@@ -6,9 +6,11 @@ namespace FaceGiants
 {
     public class Bullet : MonoBehaviour
     {
+        public float LifeTime = 2f;
+
         private void Start()
         {
-            Destroy(gameObject, 2);
+            Destroy(gameObject, LifeTime);
         }
 
         private void OnTriggerEnter2D(Collider2D collider)

@@ -22,7 +22,7 @@ namespace FaceGiants
                 Quaternion.Euler(new Vector3(0, 0, 0)),
                 // put it in bullet container
                 BulletContainer.transform
-            ) as Rigidbody2D;
+            );
 
             // Rotate the bullet to face the target
             Vector2 vectorToTarget = Player.Instance.transform.position - transform.position;

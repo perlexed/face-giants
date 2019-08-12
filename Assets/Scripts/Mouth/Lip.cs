@@ -9,12 +9,14 @@ namespace FaceGiants
 {
     public class Lip : MonoBehaviour
     {
-        public bool IsStopped = true;
         public bool IsUpperLip = false;
         public float LipOpenDuration = 1f;
+        public float _moveDistance = 1f;
+
+        public bool IsStopped { get; private set; } = true;
 
         private Vector2 _defaultPosition;
-        private float _moveDistance = 1f;
+        private ITween<Vector2> _moveTween;
 
         private void Start()
         {
@@ -24,6 +26,11 @@ namespace FaceGiants
         public void Reset()
         {
             transform.localPosition = _defaultPosition;
+
+            if (_moveTween != null)
+            {
+                _moveTween.Stop(TweenStopBehavior.Complete);
+            }
         }
 
         public void OpenLip()
@@ -41,26 +48,25 @@ namespace FaceGiants
             IsStopped = false;
             float targetYPosition = transform.position.y + (doOpen ? 1 : -1) * (IsUpperLip ? 1 : -1) * _moveDistance;
 
+            Action<ITween<Vector2>> updateLipPosition = tween =>
+            {
+                transform.position = tween.CurrentValue;
+            };
+
+            Action<ITween<Vector2>> onMoveCompletion = tween => {
+                IsStopped = true;
+            };
+
             // Move lip vertically from current position
-            gameObject.Tween(
+            _moveTween = gameObject.Tween(
                 IsUpperLip ? "MoveUpperLipTween" : "MoveBottomLipTween",
                 transform.position,
                 new Vector2(0, targetYPosition),
                 LipOpenDuration,
                 TweenScaleFunctions.CubicEaseInOut,
-                UpdateLipPosition,
-                OnMoveCompletion
+                updateLipPosition,
+                onMoveCompletion
             );
-        }
-
-        private void UpdateLipPosition(ITween<Vector2> tween)
-        {
-            transform.position = tween.CurrentValue;
-        }
-
-        private void OnMoveCompletion(ITween<Vector2> tween)
-        {
-            IsStopped = true;
         }
     }
 }

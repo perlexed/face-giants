@@ -62,7 +62,7 @@ namespace FaceGiants
         private void JumpCheck()
         {
             // The player is grounded if a linecast to the groundcheck position hits anything on the ground layer.
-            bool isGrounded = Physics2D.Linecast(transform.position, Groundcheck.position, 1 << LayerMask.NameToLayer("ground"));
+            bool isGrounded = Physics2D.Linecast(transform.position, Groundcheck.position, LayerMask.GetMask("ground"));
 
             if (Input.GetButtonDown("Jump") && isGrounded)
             {
@@ -88,13 +88,10 @@ namespace FaceGiants
             _playerRigidbody.AddForce(forcesToAdd);
             _doJump = false;
 
-            // If the player's horizontal velocity is greater than the maxSpeed set the player's velocity to the maxSpeed in the x axis
-            if (Mathf.Abs(_playerRigidbody.velocity.x) > MaxSpeed)
-            {
-                float velocitySign = Mathf.Sign(_playerRigidbody.velocity.x);
-                float limitedVelocity = velocitySign * MaxSpeed;
-                _playerRigidbody.velocity = new Vector2(limitedVelocity, _playerRigidbody.velocity.y);
-            }
+            _playerRigidbody.velocity = new Vector2(
+                Mathf.Clamp(_playerRigidbody.velocity.x, -MaxSpeed, MaxSpeed),
+                _playerRigidbody.velocity.y
+            );
         }
 
         public void GetHit()

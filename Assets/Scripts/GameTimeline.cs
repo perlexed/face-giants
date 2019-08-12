@@ -81,27 +81,18 @@ namespace FaceGiants
             DescriptionText.enabled = true;
             SetRunning(false);
 
-            StopCoroutine(_shootingCoroutine);
-            StopCoroutine(_mouthCoroutine);
+            StopAllCoroutines();
 
             Time.timeScale = 0;
         }
 
         private IEnumerator RunEyeShooting()
         {
-            bool useLeftEye = false;
             for (; ; )
             {
-                if (useLeftEye)
-                {
-                    LeftEyePoint.Shoot();
-                } else
-                {
-                    RightEyePoint.Shoot();
-                }
-
-                useLeftEye = !useLeftEye;
-
+                LeftEyePoint.Shoot();
+                yield return new WaitForSeconds(EyeShootingInterval);
+                RightEyePoint.Shoot();
                 yield return new WaitForSeconds(EyeShootingInterval);
             }
         }

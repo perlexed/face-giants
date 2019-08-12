@@ -10,12 +10,14 @@ namespace FaceGiants
         public Lip UpperLip;
         public Lip BottomLip;
 
+        private bool AreLipsMoving => !(UpperLip.IsStopped && BottomLip.IsStopped);
+
         public IEnumerator OpenLipsAndWaitForFinish()
         {
             UpperLip.OpenLip();
             BottomLip.OpenLip();
 
-            while (!UpperLip.IsStopped || !BottomLip.IsStopped)
+            while (AreLipsMoving)
             {
                 yield return null;
             }
@@ -26,11 +28,12 @@ namespace FaceGiants
             UpperLip.CloseLip();
             BottomLip.CloseLip();
 
-            while (!UpperLip.IsStopped || !BottomLip.IsStopped)
+            while (AreLipsMoving)
             {
                 yield return null;
             }
         }
+
 
         public void Reset()
         {

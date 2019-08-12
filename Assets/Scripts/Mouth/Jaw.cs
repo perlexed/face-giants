@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using DigitalRuby.Tween;
+using System;
+using Random = UnityEngine.Random;
 
 namespace FaceGiants
 {
@@ -10,38 +12,41 @@ namespace FaceGiants
         public bool IsUpperJaw;
         public float ToothMoveDistance = 1f;
         public float ToothMoveTime = 1f;
+        public float PauseTime = 1f;
         public Color ToothPaintColor = Color.red;
 
         [Space]
-        public GameObject teethContainer;
-        public GameObject laserPointsContainer;
+        public SpriteRenderer[] Teeth;
+        public LaserPoint[] LaserPoints;
 
-        private GameObject _contextTooth;
+        private SpriteRenderer _contextToothSpriteRenderer;
         private LaserPoint _contextLaserPoint;
         private Color _originalTeethColor;
 
         private Vector2 _startToothPosition;
         private Vector2 _endToothPosition;
 
+        private ITween<Vector2> _toothMoveTween;
+
         public IEnumerator FireRandomTeethAndWaitForFinish()
         {
-            int randomChildIndex = Random.Range(1, teethContainer.transform.childCount);
-            _contextTooth = teethContainer.transform.GetChild(randomChildIndex).gameObject;
-            _contextLaserPoint = laserPointsContainer.transform.GetChild(randomChildIndex).GetComponent<LaserPoint>();
-            _originalTeethColor = _contextTooth.GetComponent<SpriteRenderer>().color;
+            int randomChildIndex = Random.Range(1, Teeth.Length);
+            _contextToothSpriteRenderer = Teeth[randomChildIndex];
+            _contextLaserPoint = LaserPoints[randomChildIndex];
+            _originalTeethColor = _contextToothSpriteRenderer.color;
 
-            yield return TeethFireCycle();
+            yield return TeethFireProcedure();
         }
 
-        private IEnumerator TeethFireCycle()
+        private IEnumerator TeethFireProcedure()
         {
-            _startToothPosition = _contextTooth.transform.position;
+            _startToothPosition = _contextToothSpriteRenderer.transform.position;
             _endToothPosition = new Vector2(_startToothPosition.x, _startToothPosition.y + (IsUpperJaw ? 1 : -1) * ToothMoveDistance);
 
             yield return MoveToothAndWaitForFinish(true);
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(PauseTime);
             yield return _contextLaserPoint.FireLazerCycle();
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(PauseTime);
             yield return MoveToothAndWaitForFinish(false);
         }
 
@@ -51,23 +56,23 @@ namespace FaceGiants
             Vector2 contextStartPos = isMovingOut ? _startToothPosition : _endToothPosition;
             Vector2 contextEndPos = isMovingOut ? _endToothPosition : _startToothPosition;
 
-            System.Action<ITween<Vector2>> updateToothPos = tween =>
+            Action<ITween<Vector2>> updateToothPosition = tween =>
             {
-                _contextTooth.transform.position = tween.CurrentValue;
+                _contextToothSpriteRenderer.transform.position = tween.CurrentValue;
             };
 
-            System.Action<ITween<Vector2>> onMoveFinish = tween => {
+            Action<ITween<Vector2>> onMoveFinish = tween => {
                 isMoveCompleted = true;
             };
 
-            _contextTooth.GetComponent<SpriteRenderer>().color = isMovingOut ? ToothPaintColor : _originalTeethColor;
-            _contextTooth.Tween(
+            _contextToothSpriteRenderer.color = isMovingOut ? ToothPaintColor : _originalTeethColor;
+            _toothMoveTween = _contextToothSpriteRenderer.gameObject.Tween(
                 "MoveTooth",
                 contextStartPos,
                 contextEndPos,
                 ToothMoveTime,
                 TweenScaleFunctions.CubicEaseInOut,
-                updateToothPos,
+                updateToothPosition,
                 onMoveFinish
             );
 
@@ -76,9 +81,14 @@ namespace FaceGiants
 
         public void Reset()
         {
-            _contextTooth.GetComponent<SpriteRenderer>().color = _originalTeethColor;
-            _contextTooth.transform.position = _startToothPosition;
+            _contextToothSpriteRenderer.color = _originalTeethColor;
+            _contextToothSpriteRenderer.transform.position = _startToothPosition;
             _contextLaserPoint.Reset();
+
+            if (_toothMoveTween != null)
+            {
+                _toothMoveTween.Stop(TweenStopBehavior.Complete);
+            }
         }
     }
 

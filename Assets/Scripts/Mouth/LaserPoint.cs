@@ -9,6 +9,7 @@ namespace FaceGiants
     {
         public bool IsUpperJaw;
         public float VisibilityChangeDuration = 1f;
+        public float BeforeLaserPauseTime = 1f;
         public GameObject LaserBeamPrefab;
 
         private bool _isLaserBeamCreated = false;
@@ -16,13 +17,14 @@ namespace FaceGiants
         private Color _invisibleColor;
         private SpriteRenderer _spriteRenderer;
         private GameObject _laserInstance;
+        private ITween<Color> _colorChangeTween;
 
         private void Start()
         {
             _spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
 
-            _visibleColor = ColorHelper.GetColorByTransparency(_spriteRenderer.color, 1);
-            _invisibleColor = ColorHelper.GetColorByTransparency(_spriteRenderer.color, 0);
+            _visibleColor = _spriteRenderer.GetColorByTransparency(1f);
+            _invisibleColor = _spriteRenderer.GetColorByTransparency(0f);
         }
 
         public IEnumerator FireLazerCycle()
@@ -37,7 +39,7 @@ namespace FaceGiants
             _laserInstance = Instantiate(LaserBeamPrefab, transform);
             _isLaserBeamCreated = true;
 
-            yield return new WaitForSeconds(1);
+            yield return new WaitForSeconds(BeforeLaserPauseTime);
             yield return _laserInstance.GetComponent<LaserBeam>().Fire();
 
             Destroy(_laserInstance);
@@ -60,7 +62,7 @@ namespace FaceGiants
                 isColorChangeCompleted = true;
             };
 
-            gameObject.Tween(
+            _colorChangeTween = gameObject.Tween(
                 "MakeVisibleTween",
                 startingColor,
                 endingColor,
@@ -75,12 +77,17 @@ namespace FaceGiants
 
         public void Reset()
         {
-            _spriteRenderer.color = _invisibleColor;
-
             if (_isLaserBeamCreated)
             {
                 Destroy(_laserInstance);
             }
+
+            if (_colorChangeTween != null)
+            {
+                _colorChangeTween.Stop(TweenStopBehavior.Complete);
+            }
+
+            _spriteRenderer.color = _invisibleColor;
         }
     }
 }
